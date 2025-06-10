@@ -123,7 +123,7 @@ export function StoryBar() {
     <div className="flex space-x-4 overflow-x-auto py-4 px-1 no-scrollbar">
       {/* Current user - Add Story */}
       {user && (
-        <Link to="/stories/create" className="flex flex-col items-center">
+        <Link to="/stories/create\" className="flex flex-col items-center">
           <div className="relative">
             <Avatar 
               src={users[0]?.profile_image} 
