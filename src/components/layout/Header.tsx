@@ -1,10 +1,12 @@
-import { Search, Heart, MessageCircle, LogOut, Camera, Menu } from 'lucide-react';
+import { Search, Heart, MessageCircle, LogOut, Camera, Menu, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export function Header() {
   const { signOut } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   
   return (
@@ -39,12 +41,12 @@ export function Header() {
             </Link>
             
             <Link 
-              to="/activity" 
+              to="/notifications" 
               className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
               onClick={() => setMenuOpen(false)}
             >
               <Heart size={18} className="mr-2" />
-              <span>Activity</span>
+              <span>Notifications</span>
             </Link>
             
             <Link 
@@ -55,6 +57,17 @@ export function Header() {
               <MessageCircle size={18} className="mr-2" />
               <span>Messages</span>
             </Link>
+            
+            <button 
+              onClick={() => {
+                toggleDarkMode();
+                setMenuOpen(false);
+              }}
+              className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              {darkMode ? <Sun size={18} className="mr-2" /> : <Moon size={18} className="mr-2" />}
+              <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
             
             <button 
               onClick={() => {

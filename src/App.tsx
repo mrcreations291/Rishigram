@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/layout/Layout';
 import { HomePage } from './pages/HomePage';
 import { AuthPage } from './pages/AuthPage';
@@ -10,6 +11,10 @@ import { CreatePostPage } from './pages/CreatePostPage';
 import { ViewStoryPage } from './pages/ViewStoryPage';
 import { CreateStoryPage } from './pages/CreateStoryPage';
 import { SearchPage } from './pages/SearchPage';
+import { ReelsPage } from './pages/ReelsPage';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { MessagesPage } from './pages/MessagesPage';
+import { SavedPostsPage } from './pages/SavedPostsPage';
 
 // Protected route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -99,6 +104,42 @@ function AppRoutes() {
         />
         
         <Route
+          path="/reels"
+          element={
+            <ProtectedRoute>
+              <ReelsPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <MessagesPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/saved"
+          element={
+            <ProtectedRoute>
+              <SavedPostsPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
           path="/stories/create"
           element={
             <ProtectedRoute>
@@ -126,40 +167,20 @@ function AppRoutes() {
         }
       />
       
-      <Route path="*" element={<Navigate to="/\" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
-  
-  useEffect(() => {
-    // Check system preference for dark mode
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setDarkMode(prefersDark);
-    
-    // Listen for changes in system preference
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      setDarkMode(e.matches);
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, []);
-  
   return (
-    <div className={darkMode ? 'dark' : ''}>
+    <ThemeProvider>
       <AuthProvider>
         <Router>
           <AppRoutes />
         </Router>
       </AuthProvider>
-    </div>
+    </ThemeProvider>
   );
 }
 

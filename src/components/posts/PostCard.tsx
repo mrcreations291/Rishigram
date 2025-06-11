@@ -21,6 +21,7 @@ export function PostCard({ post }: PostCardProps) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [showComments, setShowComments] = useState(false);
@@ -64,6 +65,26 @@ export function PostCard({ post }: PostCardProps) {
     }
     
     checkLikeStatus();
+  }, [post.id, user]);
+
+  // Check if current user has saved this post
+  useEffect(() => {
+    if (!user) return;
+    
+    async function checkSavedStatus() {
+      const { data, error } = await supabase
+        .from('saved_posts')
+        .select('*')
+        .eq('post_id', post.id)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!error && data) {
+        setIsSaved(true);
+      }
+    }
+    
+    checkSavedStatus();
   }, [post.id, user]);
 
   // Get like count
@@ -174,6 +195,48 @@ export function PostCard({ post }: PostCardProps) {
       if (!error) {
         setIsLiked(true);
         setLikeCount(prev => prev + 1);
+        
+        // Create notification for post owner
+        if (post.user_id !== user.id) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: post.user_id,
+              from_user_id: user.id,
+              type: 'like',
+              post_id: post.id
+            });
+        }
+      }
+    }
+  };
+
+  // Toggle save
+  const handleSave = async () => {
+    if (!user) return;
+    
+    if (isSaved) {
+      // Unsave
+      const { error } = await supabase
+        .from('saved_posts')
+        .delete()
+        .eq('post_id', post.id)
+        .eq('user_id', user.id);
+      
+      if (!error) {
+        setIsSaved(false);
+      }
+    } else {
+      // Save
+      const { error } = await supabase
+        .from('saved_posts')
+        .insert({
+          post_id: post.id,
+          user_id: user.id
+        });
+      
+      if (!error) {
+        setIsSaved(true);
       }
     }
   };
@@ -199,6 +262,18 @@ export function PostCard({ post }: PostCardProps) {
     if (!error) {
       setCommentText('');
       setCommentCount(prev => prev + 1);
+      
+      // Create notification for post owner
+      if (post.user_id !== user.id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: post.user_id,
+            from_user_id: user.id,
+            type: 'comment',
+            post_id: post.id
+          });
+      }
     }
   };
 
@@ -255,8 +330,11 @@ export function PostCard({ post }: PostCardProps) {
               <Send size={24} />
             </button>
           </div>
-          <button className="text-gray-800 dark:text-gray-200">
-            <Bookmark size={24} />
+          <button 
+            onClick={handleSave}
+            className={`${isSaved ? 'text-black dark:text-white' : 'text-gray-800 dark:text-gray-200'}`}
+          >
+            <Bookmark size={24} fill={isSaved ? 'currentColor' : 'none'} />
           </button>
         </div>
         

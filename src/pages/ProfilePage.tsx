@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Grid, Settings, User } from 'lucide-react';
+import { Grid, Settings, User, Bookmark } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Avatar } from '../components/ui/Avatar';
@@ -20,6 +20,7 @@ export function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'posts' | 'saved'>('posts');
   const [postCount, setPostCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -158,6 +159,15 @@ export function ProfilePage() {
           
         setIsFollowing(true);
         setFollowerCount(prev => prev + 1);
+        
+        // Create notification
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: id,
+            from_user_id: user.id,
+            type: 'follow'
+          });
       }
     } catch (error) {
       console.error('Error toggling follow:', error);
@@ -223,11 +233,18 @@ export function ProfilePage() {
             <h1 className="text-xl font-semibold">{profile.username}</h1>
             
             {isCurrentUser ? (
-              <Link to="/edit-profile">
-                <Button variant="outline" size="sm">
-                  Edit Profile
-                </Button>
-              </Link>
+              <div className="flex gap-2">
+                <Link to="/edit-profile">
+                  <Button variant="outline" size="sm">
+                    Edit Profile
+                  </Button>
+                </Link>
+                <Link to="/settings">
+                  <button className="text-gray-500 dark:text-gray-400">
+                    <Settings size={20} />
+                  </button>
+                </Link>
+              </div>
             ) : (
               <Button 
                 variant={isFollowing ? 'outline' : 'primary'} 
@@ -237,14 +254,6 @@ export function ProfilePage() {
               >
                 {isFollowing ? 'Following' : 'Follow'}
               </Button>
-            )}
-            
-            {isCurrentUser && (
-              <Link to="/settings" className="md:ml-2">
-                <button className="text-gray-500 dark:text-gray-400">
-                  <Settings size={20} />
-                </button>
-              </Link>
             )}
           </div>
           
@@ -270,49 +279,89 @@ export function ProfilePage() {
         </div>
       </div>
       
-      {/* Posts Grid */}
+      {/* Tabs */}
       <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
         <div className="flex justify-center mb-4">
-          <div className="text-center border-t-2 border-black py-2 px-4 dark:border-white">
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`text-center py-2 px-4 ${
+              activeTab === 'posts'
+                ? 'border-t-2 border-black dark:border-white'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}
+          >
             <Grid size={16} className="inline-block mr-1" />
             <span className="uppercase text-xs font-semibold">Posts</span>
-          </div>
+          </button>
+          
+          {isCurrentUser && (
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`text-center py-2 px-4 ml-8 ${
+                activeTab === 'saved'
+                  ? 'border-t-2 border-black dark:border-white'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              <Bookmark size={16} className="inline-block mr-1" />
+              <span className="uppercase text-xs font-semibold">Saved</span>
+            </button>
+          )}
         </div>
         
-        {posts.length > 0 ? (
-          <div className="grid grid-cols-3 gap-1">
-            {posts.map(post => (
-              <Link 
-                key={post.id} 
-                to={`/post/${post.id}`}
-                className="aspect-square bg-gray-100 relative overflow-hidden dark:bg-gray-800"
-              >
-                <img 
-                  src={post.image_url} 
-                  alt={post.caption || 'Post'} 
-                  className="w-full h-full object-cover"
-                />
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <Grid size={64} className="mx-auto text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Posts Yet</h2>
-            {isCurrentUser ? (
-              <div>
-                <p className="text-gray-600 mb-4 dark:text-gray-400">
-                  Share photos and videos that will appear on your profile.
-                </p>
-                <Link to="/create">
-                  <Button>Create First Post</Button>
-                </Link>
+        {/* Posts Grid */}
+        {activeTab === 'posts' && (
+          <>
+            {posts.length > 0 ? (
+              <div className="grid grid-cols-3 gap-1">
+                {posts.map(post => (
+                  <Link 
+                    key={post.id} 
+                    to={`/post/${post.id}`}
+                    className="aspect-square bg-gray-100 relative overflow-hidden dark:bg-gray-800"
+                  >
+                    <img 
+                      src={post.image_url} 
+                      alt={post.caption || 'Post'} 
+                      className="w-full h-full object-cover"
+                    />
+                  </Link>
+                ))}
               </div>
             ) : (
-              <p className="text-gray-600 dark:text-gray-400">
-                This user hasn't posted anything yet.
-              </p>
+              <div className="text-center py-12">
+                <Grid size={64} className="mx-auto text-gray-400 mb-4" />
+                <h2 className="text-xl font-semibold mb-2">No Posts Yet</h2>
+                {isCurrentUser ? (
+                  <div>
+                    <p className="text-gray-600 mb-4 dark:text-gray-400">
+                      Share photos and videos that will appear on your profile.
+                    </p>
+                    <Link to="/create">
+                      <Button>Create First Post</Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-400">
+                    This user hasn't posted anything yet.
+                  </p>
+                )}
+              </div>
             )}
+          </>
+        )}
+        
+        {/* Saved Posts */}
+        {activeTab === 'saved' && isCurrentUser && (
+          <div className="text-center py-12">
+            <Bookmark size={64} className="mx-auto text-gray-400 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">No saved posts yet</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              When you save posts, they'll appear here.
+            </p>
+            <Link to="/saved" className="mt-4 inline-block">
+              <Button variant="outline">View All Saved Posts</Button>
+            </Link>
           </div>
         )}
       </div>

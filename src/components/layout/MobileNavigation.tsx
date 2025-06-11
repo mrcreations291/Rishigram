@@ -1,4 +1,4 @@
-import { Home, Search, PlusSquare, Heart, User } from 'lucide-react';
+import { Home, Search, Play, Heart, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,16 +27,16 @@ export function MobileNavigation() {
         </NavLink>
         
         <NavLink 
-          to="/create" 
+          to="/reels" 
           className={({ isActive }) => 
             `flex flex-col items-center justify-center w-full h-full ${isActive ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`
           }
         >
-          <PlusSquare size={24} />
+          <Play size={24} />
         </NavLink>
         
         <NavLink 
-          to="/activity" 
+          to="/notifications" 
           className={({ isActive }) => 
             `flex flex-col items-center justify-center w-full h-full ${isActive ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`
           }
